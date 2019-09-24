@@ -14,5 +14,7 @@
   },
   "scripts": {
     "postversion": "git push --follow-tags"
-  }
+  },
+  "repository": "https://gitlab.com/theplenkov-npm/ui5-fiori-sandbox.git",
+  "author": "Petr Plenkov <petr.plenkov@booking.com>"
 }
