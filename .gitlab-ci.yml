@@ -4,6 +4,6 @@ publish:
   only:
     - tags
   script:
-    - yarn publish
+    - npm publish
   tags:
     - docker
