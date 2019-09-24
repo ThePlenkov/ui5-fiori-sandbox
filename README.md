@@ -36,6 +36,7 @@ server:
         cdn: https://sapui5.eu1.hana.ondemand.com
 
 ```
+If cdn and verison are not provided by default it will go to ui5.sap.com (latest)
 
 4. This is a temporary but required currently step
 Please add the following section into your package.json
