@@ -1,0 +1,18 @@
+{
+  "name": "ui5-fiori-sandbox",
+  "version": "2.0.1",
+  "description": "Fiori Sandbox middleware",
+  "main": "fioriSandbox.js",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "http-proxy-middleware": "^0.20.0",
+    "https-proxy-agent": "^2.2.2",
+    "nocache": "^2.1.0",
+    "node-fetch": "^2.6.0",
+    "serve-static": "^1.14.1"
+  },
+  "scripts": {
+    "postversion": "git push --follow-tags"
+  }
+}

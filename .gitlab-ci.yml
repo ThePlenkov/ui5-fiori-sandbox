@@ -1,0 +1,9 @@
+image: node
+
+publish:
+  only:
+    - tags
+  script:
+    - yarn publish
+  tags:
+    - docker
