@@ -3,150 +3,139 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const noCache = require("nocache");
 const static = require("serve-static");
-const fs = require('fs').promises;
+const fs = require("fs").promises;
 const ProxyAgent = require("https-proxy-agent");
+const express = require("express");
 
+let serveUi5 = oConfig => {
+  const app = express.Router();
 
+  let oSettings = oConfig || {};
+  var oNeoApp = oSettings.neoApp,
+    oDestinations = oSettings.destinations,
+    oManifest = oSettings.manifest,
+    oAgent = oSettings.agent;
 
-let serveUi5 = (oConfig, app) => {
-    let oSettings = oConfig || {};
-    var oNeoApp = oSettings.neoApp,
-        oDestinations = oSettings.destinations,
-        oManifest = oSettings.manifest,
-        oAgent = oSettings.agent;
+  let cdn = oSettings.cdn || "https://ui5.sap.com";
+  if (oSettings.version) {
+    cdn += "/" + oSettings.version;
+  }
 
-    let cdn = oSettings.cdn || "https://ui5.sap.com";
-    if (oSettings.version) {
-        cdn += "/" + oSettings.version;
+  const homePage =
+    "/test-resources/sap/ushell/shells/sandbox/fioriSandbox.html";
+  // redirect to FLP
+  app.get("/", async (req, res) => {
+    res.redirect(homePage);
+  });
+
+  // support appconfig
+  app.use("/appconfig", static("appconfig"));
+
+  // redirect to FLP
+  app.get(homePage, async (req, res) => {
+    let flp = await fetch(cdn + homePage, {
+      agent: oAgent
+    });
+    const $ = cheerio.load(await flp.text());
+    if ($("#sap-ui-bootstrap").attr()) {
+      $("#sap-ui-bootstrap").attr().src = cdn + "/resources/sap-ui-core.js";
     }
-
-    const homePage =
-        "/test-resources/sap/ushell/shells/sandbox/fioriSandbox.html";
-    // redirect to FLP
-    app.get("/", async (req, res) => {
-        res.redirect(homePage);
+    if ($("#sap-ushell-bootstrap").attr()) {
+      $("#sap-ushell-bootstrap").attr().src =
+        cdn + "/test-resources/sap/ushell/bootstrap/sandbox.js";
+    }
+    //standalone script
+    $('script[src="../../bootstrap/standalone.js"]').each((index, node) => {
+      node.attribs.src =
+        cdn + "/test-resources/sap/ushell/bootstrap/standalone.js";
     });
 
-    // support appconfig    
-    app.use("/appconfig", static("appconfig"));
+    res.send($.html());
+  });
 
-    // redirect to FLP
-    app.get(homePage, async (req, res) => {
-        let flp = await fetch(cdn + homePage, {
-            agent: oAgent
-        });
-        const $ = cheerio.load(await flp.text());
-        if ($("#sap-ui-bootstrap").attr()) {
-            $("#sap-ui-bootstrap").attr().src = cdn + "/resources/sap-ui-core.js";
-        }
-        if ($("#sap-ushell-bootstrap").attr()) {
-            $("#sap-ushell-bootstrap").attr().src =
-                cdn + "/test-resources/sap/ushell/bootstrap/sandbox.js";
-        }
-        //standalone script
-        $('script[src="../../bootstrap/standalone.js"]').each((index, node) => {
-            node.attribs.src =
-                cdn + "/test-resources/sap/ushell/bootstrap/standalone.js";
-        });
+  // no odata cache (including metadata)
+  app.use("/sap/opu", noCache());
 
-        res.send($.html());
-    });
+  if (oNeoApp && oNeoApp.routes) {
+    oNeoApp.routes.forEach(function(oRoute) {
+      var oTarget = oRoute.target;
+      if (oTarget) {
+        // proxy options
+        var oOptions = {};
 
-    // no odata cache (including metadata)
-    app.use("/sap/opu", noCache());
+        switch (oTarget.name) {
+          case "sapui5":
+            oOptions.target = cdn;
+            oOptions.changeOrigin = true;
+            oOptions.secure = false;
+            break;
 
-    if (oNeoApp && oNeoApp.routes) {
-        oNeoApp.routes.forEach(function (oRoute) {
-            var oTarget = oRoute.target;
-            if (oTarget) {
-                // proxy options
-                var oOptions = {};
-
-                switch (oTarget.name) {
-
-                    case "sapui5":
-
-                        oOptions.target = cdn;
-                        oOptions.changeOrigin = true;
-                        oOptions.secure = false;
-                        break;
-
-                    default:
-
-                        if (oDestinations && oTarget.name) {
-                            var oDestination = oDestinations[oTarget.name];
-                            if (oDestination) {
-                                oOptions.target = oDestination.target;
-                                oOptions.changeOrigin = true;
-                                oOptions.secure = false;
-                                if (oDestination.useProxy) {
-                                    oOptions.agent = oAgent;
-                                }
-                            }
-                        }
-
+          default:
+            if (oDestinations && oTarget.name) {
+              var oDestination = oDestinations[oTarget.name];
+              if (oDestination) {
+                oOptions.target = oDestination.target;
+                oOptions.changeOrigin = true;
+                oOptions.secure = false;
+                if (oDestination.useProxy) {
+                  oOptions.agent = oAgent;
                 }
-
-                // search for destination
-                if (oRoute.path && oTarget.entryPath) {
-                    var oRouteNew = {};
-                    var sPathOld = "^" + oRoute.path;
-                    oRouteNew[sPathOld] = oTarget.entryPath;
-                    oOptions.pathRewrite = oRouteNew;
-                }
-
-                oOptions.target && app.use(oRoute.path, proxy(oOptions));
+              }
             }
-        });
-    }
+        }
 
-    return app;
+        // search for destination
+        if (oRoute.path && oTarget.entryPath) {
+          var oRouteNew = {};
+          var sPathOld = "^" + oRoute.path;
+          oRouteNew[sPathOld] = oTarget.entryPath;
+          oOptions.pathRewrite = oRouteNew;
+        }
+
+        oOptions.target && app.use(oRoute.path, proxy(oOptions));
+      }
+    });
+  }
+
+  return app;
 };
 
-
 async function readJSON(path) {
-
-    try {
-        let file = await fs.readFile(path);
-        return JSON.parse(await file.toString());
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    let file = await fs.readFile(path);
+    return JSON.parse(await file.toString());
+  } catch (error) {
+    console.error(error);
+  }
 }
 
-module.exports = async function ({ resources, options, app }) {
+module.exports = async function({ resources, options }) {
+  let config = Object.assign(
+    {
+      manifest: "webapp/manifest.json",
+      neoApp: "neo-app.json",
+      destinations: "neo-dest.json"
+    },
+    options && options.configuration
+  );
 
-    let config = Object.assign({
-        manifest: "webapp/manifest.json",
-        neoApp: "neo-app.json",
-        destinations: "neo-dest.json"
-    }, options && options.configuration);
+  const HTTP_PROXY = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  const agent = HTTP_PROXY && new ProxyAgent(HTTP_PROXY);
 
-    const HTTP_PROXY = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-    const agent = HTTP_PROXY && new ProxyAgent(HTTP_PROXY);
-
-    try {
-
-        serveUi5(
-            Object.assign(
-                {},
-                options && options.configuration,
-                {
-                    neoApp: await readJSON(config.neoApp),
-                    destinations: await readJSON(config.destinations),
-                    manifest: await readJSON(config.manifest),
-                },
-                agent && { agent }
-            ),
-            app
-        );
-
-    } catch (error) {
-        console.log(error);
-    }
-
-    // dummy call
-    return (req, res, next) => {
-        next();
-    };
+  try {
+    return serveUi5(
+      Object.assign(
+        {},
+        options && options.configuration,
+        {
+          neoApp: await readJSON(config.neoApp),
+          destinations: await readJSON(config.destinations),
+          manifest: await readJSON(config.manifest)
+        },
+        agent && { agent }
+      )
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };
