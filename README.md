@@ -38,16 +38,6 @@ server:
 ```
 If cdn and verison are not provided by default it will go to ui5.sap.com (latest)
 
-4. This is a temporary but required currently step
-Please add the following section into your package.json
-```json
-{
-    "resolutions": {
-        "@ui5/server": "https://github.com/ThePlenkov/ui5-server.git#feature/app-in-middleware"
-     }
-}
-```
-After this change will be merged with a main project - this step will be omitted
 
 5. Create a file appconfig/fioriSandboxConfig.json
 ```json
