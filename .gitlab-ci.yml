@@ -1,9 +1,0 @@
-image: node
-
-publish:
-  only:
-    - tags
-  script:
-    - npm publish
-  tags:
-    - docker
