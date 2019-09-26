@@ -39,7 +39,7 @@ server:
 If cdn and verison are not provided by default it will go to ui5.sap.com (latest)
 
 
-5. Create a file appconfig/fioriSandboxConfig.json
+4. Create a file appconfig/fioriSandboxConfig.json
 ```json
 {
   "services": {
