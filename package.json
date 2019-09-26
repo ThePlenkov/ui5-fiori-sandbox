@@ -1,6 +1,6 @@
 {
   "name": "ui5-fiori-sandbox",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Fiori Sandbox middleware",
   "main": "fioriSandbox.js",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "serve-static": "^1.14.1"
   },
   "scripts": {
-    "postversion": "git push --follow-tags && yarn publish --non-interactive"
+    "postversion": "git push --tags && yarn publish . --tag $npm_package_version && git push && echo \"Successfully released version $npm_package_version!\""
   },
   "repository": "https://gitlab.com/theplenkov-npm/ui5-fiori-sandbox.git",
   "author": "Petr Plenkov <petr.plenkov@booking.com>"
