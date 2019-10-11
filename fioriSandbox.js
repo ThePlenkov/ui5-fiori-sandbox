@@ -40,8 +40,8 @@ let serveUi5 = oConfig => {
   app.use("/appconfig", static("appconfig"));
 
   // redirect to FLP
-  app.get(homePage, async (req, res) => {
-    let flp = await fetch(cdn + homePage, {
+  app.get(`${homePage.pathname}?*`, async (req, res) => {
+    let flp = await fetch(cdn + homePage.pathname, {
       agent: oAgent
     });
     const $ = cheerio.load(await flp.text());
