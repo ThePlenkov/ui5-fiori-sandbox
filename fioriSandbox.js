@@ -6,9 +6,10 @@ const static = require("serve-static");
 const fs = require("fs").promises;
 const ProxyAgent = require("https-proxy-agent");
 const express = require("express");
+const url = require("url");
 
 let serveUi5 = oConfig => {
-  const app = express.Router();
+  const app = express();
 
   let oSettings = oConfig || {};
   var oNeoApp = oSettings.neoApp,
@@ -21,11 +22,18 @@ let serveUi5 = oConfig => {
     cdn += "/" + oSettings.version;
   }
 
-  const homePage =
-    "/test-resources/sap/ushell/shells/sandbox/fioriSandbox.html";
+  let homePage = Object.assign(
+    {
+      pathname: "/test-resources/sap/ushell/shells/sandbox/fioriSandbox.html"
+    },
+    oSettings.homePage
+  );
+
+  const homePageURL = url.format(homePage);
+
   // redirect to FLP
   app.get("/", async (req, res) => {
-    res.redirect(homePage);
+    res.redirect(homePageURL);
   });
 
   // support appconfig
