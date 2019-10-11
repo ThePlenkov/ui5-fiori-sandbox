@@ -34,10 +34,16 @@ server:
       configuration:
         version: 1.44.42
         cdn: https://sapui5.eu1.hana.ondemand.com
+        homePage:
+          # pathname: /test-resources/sap/ushell/shells/sandbox/fioriSandbox.html
+          query:
+            sap-ui-debug: true
+            sap-ui-xx-viewCache: false
 
 ```
 If cdn and verison are not provided by default it will go to ui5.sap.com (latest)
 
+You can use query section to predefine default URL query parameters for a home page. Also home page itself might be redefined. It's /test-resources/sap/ushell/shells/sandbox/fioriSandbox.html by default.
 
 4. Create a file appconfig/fioriSandboxConfig.json
 ```json
