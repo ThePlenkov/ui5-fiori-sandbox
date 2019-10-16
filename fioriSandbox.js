@@ -31,16 +31,20 @@ let serveUi5 = oConfig => {
 
   const homePageURL = url.format(homePage);
 
-  // redirect to FLP
-  app.get("/", async (req, res) => {
-    res.redirect(homePageURL);
+  // change URL parameters
+  app.get("/", async ({ query }, res, next) => {
+    if (!Object.keys(query).length && Object.keys(homePage.query).length) {
+      res.redirect(url.format({ query: homePage.query }));
+    } else {
+      next();
+    }
   });
 
   // support appconfig
   app.use("/appconfig", static("appconfig"));
 
   // redirect to FLP
-  app.get(`${homePage.pathname}?*`, async (req, res) => {
+  app.get("/", async (req, res) => {
     let flp = await fetch(cdn + homePage.pathname, {
       agent: oAgent
     });
