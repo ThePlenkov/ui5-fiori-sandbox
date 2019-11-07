@@ -41,8 +41,9 @@ let serveUi5 = oConfig => {
   });
 
   // support appconfig
-  app.use("/appconfig", static("appconfig"));
-
+  ["appconfig"]
+    .concat(oConfig.staticResources)
+    .forEach(sPath => app.use(`/${sPath}`, static(sPath)));
   // redirect to FLP
   app.get("/", async (req, res) => {
     let flp = await fetch(cdn + homePage.pathname, {
