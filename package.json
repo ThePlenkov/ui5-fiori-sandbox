@@ -1,6 +1,6 @@
 {
   "name": "ui5-fiori-sandbox",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Fiori Sandbox middleware",
   "main": "fioriSandbox.js",
   "license": "MIT",
