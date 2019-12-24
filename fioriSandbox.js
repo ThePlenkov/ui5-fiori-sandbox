@@ -69,8 +69,15 @@ let serveUi5 = oConfig => {
   // no odata cache (including metadata)
   app.use("/sap/opu", noCache());
 
+  let oCdnTarget = {
+    target: cdn,
+    changeOrigin: true,
+    secure: false
+  };
+
+
   if (oNeoApp && oNeoApp.routes) {
-    oNeoApp.routes.forEach(function(oRoute) {
+    oNeoApp.routes.forEach(function (oRoute) {
       var oTarget = oRoute.target;
       if (oTarget) {
         // proxy options
@@ -78,9 +85,7 @@ let serveUi5 = oConfig => {
 
         switch (oTarget.name) {
           case "sapui5":
-            oOptions.target = cdn;
-            oOptions.changeOrigin = true;
-            oOptions.secure = false;
+            Object.assign(oOptions, oCdnTarget);
             break;
 
           default:
@@ -108,6 +113,10 @@ let serveUi5 = oConfig => {
         oOptions.target && app.use(oRoute.path, proxy(oOptions));
       }
     });
+  } else {
+    // alternative no neo-app.json logic
+    app.use('/resources', proxy(oCdnTarget));
+    app.use('/test-resources', proxy(oCdnTarget));
   }
 
   return app;
@@ -118,11 +127,11 @@ async function readJSON(path) {
     let file = await fs.readFile(path);
     return JSON.parse(await file.toString());
   } catch (error) {
-    console.error(error);
+    //    
   }
 }
 
-module.exports = async function({ resources, options }) {
+module.exports = async function ({ resources, options }) {
   let config = Object.assign(
     {
       manifest: "webapp/manifest.json",
