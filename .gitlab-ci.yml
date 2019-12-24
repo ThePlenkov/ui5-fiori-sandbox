@@ -1,0 +1,3 @@
+include:
+  - project: theplenkov-npm/npm-cicd
+    file: /npm/.gitlab-ci.yml
