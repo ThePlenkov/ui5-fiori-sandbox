@@ -43,7 +43,7 @@ let serveUi5 = oConfig => {
   // support appconfig
   ["appconfig"]
     .concat(oConfig.staticResources)
-    .forEach(sPath => app.use(`/${sPath}`, static(sPath)));
+    .forEach(sPath => sPath && app.use(`/${sPath}`, static(sPath)));
   // redirect to FLP
   app.get("/", async (req, res) => {
     let flp = await fetch(cdn + homePage.pathname, {
@@ -75,9 +75,8 @@ let serveUi5 = oConfig => {
     secure: false
   };
 
-
   if (oNeoApp && oNeoApp.routes) {
-    oNeoApp.routes.forEach(function (oRoute) {
+    oNeoApp.routes.forEach(function(oRoute) {
       var oTarget = oRoute.target;
       if (oTarget) {
         // proxy options
@@ -115,8 +114,8 @@ let serveUi5 = oConfig => {
     });
   } else {
     // alternative no neo-app.json logic
-    app.use('/resources', proxy(oCdnTarget));
-    app.use('/test-resources', proxy(oCdnTarget));
+    app.use("/resources", proxy(oCdnTarget));
+    app.use("/test-resources", proxy(oCdnTarget));
   }
 
   return app;
@@ -127,11 +126,11 @@ async function readJSON(path) {
     let file = await fs.readFile(path);
     return JSON.parse(await file.toString());
   } catch (error) {
-    //    
+    //
   }
 }
 
-module.exports = async function ({ resources, options }) {
+module.exports = async function({ resources, options }) {
   let config = Object.assign(
     {
       manifest: "webapp/manifest.json",
